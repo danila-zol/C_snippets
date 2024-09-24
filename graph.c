@@ -10,14 +10,26 @@ struct LLNode {
 	struct LLNode *prev;
 };
 
+
 struct GraphNode {
-	struct LLNode *data;
+	char *data;
 	uint64_t neighbours_count;
-	struct LLNode **neighbours; // Array of pointers to neighbours
+	struct Neighbour {
+		struct GraphNode *n;
+		struct Neighbour *next;
+	} *neighbours;
+};
+
+
+struct Graph {
+	size_t size;
+	struct GraphNode nodes[];
 };
 
 typedef struct LLNode LLNode;
 typedef struct LLNode DQueue;
+typedef struct GraphNode GraphNode;
+typedef struct Graph Graph;
 
 struct LLNode *search_list(const struct LLNode *ll, const char *str)
 {
@@ -31,16 +43,16 @@ struct LLNode *search_list(const struct LLNode *ll, const char *str)
 	return NULL;
 }
 
-DQueue *enqueue(DQueue *q, LLNode *node)
+LLNode *stack(LLNode *q, LLNode *node)
 {
 	q->next = node;
 	node->prev = q;
 	return node;
 }
 
-DQueue *dequeue(DQueue *q) 
+LLNode *pop(LLNode *q) 
 {
-	DQueue *prev_node = q->prev;
+	LLNode *prev_node = q->prev;
 	prev_node->next = NULL;
 	free(q->str);
 	free(q);
@@ -117,6 +129,23 @@ int test_step()
 	return 1;
 }
 
+int graph_add_node(struct Graph **g, struct GraphNode *gn)
+{
+	if (!(*g = realloc(*g, sizeof(*g) + ((*g)->size + 1) * sizeof(struct GraphNode)))) {
+		return -1;
+	}
+
+	(*g)->size++;
+	memcpy((*g)->nodes + ((*g)->size - 1), gn, sizeof(*gn));
+
+	return 1;
+}
+
+int node_add_neighbour(struct GraphNode *g, struct GraphNode *neighbour)
+{
+	return 1;
+}
+
 int test()
 {
 	srand(42);
@@ -133,9 +162,37 @@ int test()
 	return 1;
 }
 
+
+
 int main()
 {
-	test();
+	size_t len = 8;
+	char *names[8] = {"You", "Alice", "Bob", "Claire", "Preggy", "Anuj", "Thom", "Jhonny"};
+	struct Graph *graph = malloc(sizeof(struct Graph));
+	graph->size = 0;
+
+	struct GraphNode *gn = malloc(sizeof(*gn));
+	for (int n = 0; n < len; n++) {
+		gn->data = malloc(strlen(names[n]) + 1);
+		strcpy(gn->data, names[n]);
+		graph_add_node(&graph, gn);
+	}
+	free(gn);
+	struct GraphNode *nodes = graph->nodes;
+
+	for (int n = 0; n < len; n++) {
+		printf("%lu: %s\n", (unsigned long) (graph->nodes + n), graph->nodes[n].data);
+	}
+
+	// for (int n = 0; n < len; n++) {
+	// 	struct GraphNode gn = graph->nodes[n];
+	// 	switch (n) {
+	// 		case 0:
+	// 			node_add_neighbour(&gn, &graph->nodes[2]);
+	// 			node_add_neighbour(&gn, &graph->nodes[1]);
+	// 			node_add_neighbour(&gn, &graph->nodes[3]);
+	// 	}
+	// }
 
 	return 0;
 }
